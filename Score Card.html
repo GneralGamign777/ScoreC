@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoring Card</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .scoring-card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 700px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            border: 1px solid black;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+        .cell-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .button {
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .button.decrement {
+            background-color: #dc3545;
+        }
+        .header {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        .team-input {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .team-input input {
+            font-size: 18px;
+            padding: 5px;
+            text-align: center;
+            width: 250px;
+            margin: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:active {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Scoring Card</h1>
+    <div class="team-input">
+        <input type="text" id="team1" placeholder="Enter Team 1 Name" />
+        <input type="text" id="team2" placeholder="Enter Team 2 Name" />
+    </div>
+    <div class="scoring-card">
+        <!-- Headers -->
+        <div class="header">Quarter</div>
+        <div class="header">Goals</div>
+        <div class="header">Behinds</div>
+        <div class="header">Goals</div>
+        <div class="header">Behinds</div>
+
+        <!-- Generate four quarters dynamically -->
+        <script>
+            for (let i = 1; i <= 4; i++) {
+                document.write(`<div class="cell header">${i}th</div>`);
+                for (let j = 0; j < 4; j++) {
+                    document.write(`
+                        <div class="cell">
+                            <span class="score">0</span>
+                            <div class="cell-buttons">
+                                <button class="button increment" onclick="updateScore(this, 1)">+</button>
+                                <button class="button decrement" onclick="updateScore(this, -1)">-</button>
+                            </div>
+                        </div>
+                    `);
+                }
+            }
+        </script>
+
+        <!-- Total Row -->
+        <div class="header">Total</div>
+        <div class="cell" id="totalGoalsTeam1">0</div>
+        <div class="cell" id="totalBehindsTeam1">0</div>
+        <div class="cell" id="totalGoalsTeam2">0</div>
+        <div class="cell" id="totalBehindsTeam2">0</div>
+    </div>
+
+    <button id="download-pdf">Download PDF</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+    <script>
+        function updateScore(button, value) {
+            const scoreSpan = button.parentElement.previousElementSibling;
+            let currentScore = parseInt(scoreSpan.textContent, 10) || 0;
+            currentScore = Math.max(0, currentScore + value);
+            scoreSpan.textContent = currentScore;
+
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const scores = document.querySelectorAll('.scoring-card .score');
+            let team1Goals = 0, team1Behinds = 0, team2Goals = 0, team2Behinds = 0;
+
+            scores.forEach((score, index) => {
+                const value = parseInt(score.textContent, 10) || 0;
+                if (index % 4 === 0) team1Goals += value;
+                else if (index % 4 === 1) team1Behinds += value;
+                else if (index % 4 === 2) team2Goals += value;
+                else if (index % 4 === 3) team2Behinds += value;
+            });
+
+            document.getElementById('totalGoalsTeam1').textContent = team1Goals;
+            document.getElementById('totalBehindsTeam1').textContent = team1Behinds;
+            document.getElementById('totalGoalsTeam2').textContent = team2Goals;
+            document.getElementById('totalBehindsTeam2').textContent = team2Behinds;
+        }
+
+        document.getElementById('download-pdf').addEventListener('click', function () {
+            const team1Name = document.getElementById('team1').value || "Team 1";
+            const team2Name = document.getElementById('team2').value || "Team 2";
+
+            const team1Points = parseInt(document.getElementById('totalGoalsTeam1').textContent, 10) * 6 + parseInt(document.getElementById('totalBehindsTeam1').textContent, 10);
+            const team2Points = parseInt(document.getElementById('totalGoalsTeam2').textContent, 10) * 6 + parseInt(document.getElementById('totalBehindsTeam2').textContent, 10);
+
+            const pdfContent = `
+                <div style="text-align: center; font-family: Arial, sans-serif;">
+                    <h1>Scoring Summary</h1>
+                    <h2>${team1Name}</h2>
+                    <p>Quarter 1: ${document.querySelectorAll('.scoring-card .score')[0].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[0].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[1].textContent})</p>
+                    <p>Quarter 2: ${document.querySelectorAll('.scoring-card .score')[4].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[4].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[5].textContent})</p>
+                    <p>Quarter 3: ${document.querySelectorAll('.scoring-card .score')[8].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[8].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[9].textContent})</p>
+                    <p>Quarter 4: ${document.querySelectorAll('.scoring-card .score')[12].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[12].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[13].textContent})</p>
+                    <p>Total Goals: ${document.getElementById('totalGoalsTeam1').textContent} | Total Behinds: ${document.getElementById('totalBehindsTeam1').textContent} | Total Points: ${team1Points}</p>
+                    <h2>${team2Name}</h2>
+                    <p>Quarter 1: ${document.querySelectorAll('.scoring-card .score')[2].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[2].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[3].textContent})</p>
+                    <p>Quarter 2: ${document.querySelectorAll('.scoring-card .score')[6].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[6].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[7].textContent})</p>
+                    <p>Quarter 3: ${document.querySelectorAll('.scoring-card .score')[10].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[10].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[11].textContent})</p>
+                    <p>Quarter 4: ${document.querySelectorAll('.scoring-card .score')[14].textContent} (Goals: ${document.querySelectorAll('.scoring-card .score')[14].textContent} | Behinds: ${document.querySelectorAll('.scoring-card .score')[15].textContent})</p>
+                    <p>Total Goals: ${document.getElementById('totalGoalsTeam2').textContent} | Total Behinds: ${document.getElementById('totalBehindsTeam2').textContent} | Total Points: ${team2Points}</p>
+                </div>
+            `;
+
+            const container = document.createElement('div');
+            container.innerHTML = pdfContent;
+            document.body.appendChild(container);
+
+            html2pdf()
+                .set({ filename: 'scoring_card.pdf' })
+                .from(container)
+                .save()
+                .then(() => {
+                    document.body.removeChild(container);
+                });
+        });
+    </script>
+</body>
+</html>
